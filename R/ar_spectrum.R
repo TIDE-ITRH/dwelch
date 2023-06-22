@@ -1,5 +1,14 @@
-
-ar_spectrum <- function(phis, sd, ff) {
+#' Calculate AR spectrum
+#'
+#' @param ff frequencies at which to compute spectrum
+#' @param phis autoregressive parameters
+#' @param sd standard deviation of the noise
+#'
+#' @return A vector of the AR spectrum corresponding the ff frequencies
+#' @export
+#'
+#' @examples
+ar_spectrum <- function(ff, phis, sd) {
     d <- 1
     d_conj <- 1
 
