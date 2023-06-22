@@ -5,12 +5,13 @@
 #' @param l length of blocks
 #' @param s shift factor
 #' @param delta sampling interval
+#' @param window optional window to apply to data. Defaults to rectangular
 #'
 #' @return A tibble containing Welch's estimate
 #' @export
 #'
 #' @examples
-pwelch <- function(ts, m, l, s, delta = 1) {
+pwelch <- function(ts, m, l, s, delta = 1, window = NULL) {
 
     is_even <- l %% 2 == 0
     n <- (m - 1) * s + l
@@ -18,6 +19,10 @@ pwelch <- function(ts, m, l, s, delta = 1) {
     if (length(ts) != n) {
         warning("n does not equal length of ts")
         stop() # Change to zero-pad and continue
+    }
+
+    if (is.null(window)) {
+        window <- rep(1, l)
     }
 
     if (is_even) {
@@ -29,11 +34,13 @@ pwelch <- function(ts, m, l, s, delta = 1) {
     ff <- (1:(n_spec)) / (l * delta)
     pxx <- matrix(nrow = n_spec, ncol = m)
 
+    window <- window / sqrt(sum(window^2))
+
     for (i in 1:m){
         start <- (i - 1) * s + 1
         end <- start + l - 1
-        ts_tmp <- ts[start:end]
-        pxx[, i] <- 1 / l * (Mod(stats::fft(ts_tmp))^2)[2:(n_spec + 1)]
+        ts_tmp <- ts[start:end] * window
+        pxx[, i] <- (Mod(stats::fft(ts_tmp))^2)[2:(n_spec + 1)]
     }
 
     welch_estimate <- rowMeans(pxx)
