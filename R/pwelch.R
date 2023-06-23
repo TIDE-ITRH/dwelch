@@ -13,8 +13,8 @@
 #' @examples
 pwelch <- function(ts, m, l, s, delta = 1, window = NULL) {
 
-    is_even <- l %% 2 == 0
     n <- (m - 1) * s + l
+    nfreq <- get_nfreq(l)
 
     if (length(ts) != n) {
         warning("n does not equal length of ts")
@@ -25,14 +25,8 @@ pwelch <- function(ts, m, l, s, delta = 1, window = NULL) {
         window <- rep(1, l)
     }
 
-    if (is_even) {
-        n_spec <- floor(l / 2) - 1
-    } else {
-        n_spec <- floor(l / 2)
-    }
-
-    ff <- (1:(n_spec)) / (l * delta)
-    pxx <- matrix(nrow = n_spec, ncol = m)
+    ff <- (1:(nfreq)) / (l * delta)
+    pxx <- matrix(nrow = nfreq, ncol = m)
 
     window <- window / sqrt(sum(window^2))
 
@@ -40,7 +34,7 @@ pwelch <- function(ts, m, l, s, delta = 1, window = NULL) {
         start <- (i - 1) * s + 1
         end <- start + l - 1
         ts_tmp <- ts[start:end] * window
-        pxx[, i] <- (Mod(stats::fft(ts_tmp))^2)[2:(n_spec + 1)]
+        pxx[, i] <- (Mod(stats::fft(ts_tmp))^2)[2:(nfreq + 1)]
     }
 
     welch_estimate <- rowMeans(pxx)
