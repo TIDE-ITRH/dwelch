@@ -2,6 +2,7 @@
 
 export(ar_spectrum)
 export(bochner)
+export(build_bases)
 export(get_nfreq)
 export(pwelch)
 export(sinc)

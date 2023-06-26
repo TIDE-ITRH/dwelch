@@ -2,7 +2,6 @@
 #'
 #' @inheritParams pwelch
 #' @param acf acf of the time-series
-#' @param bias boolean value to bias as per Sykulski (2019)
 #'
 #' @return A vector of the positive spectral density,
 #' excluding zero and Nyquist frequencies

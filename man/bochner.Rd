@@ -4,14 +4,14 @@
 \alias{bochner}
 \title{Compute Bochner's Theorem}
 \usage{
-bochner(acf, delta = 1, bias = FALSE)
+bochner(acf, delta = 1, h = NULL)
 }
 \arguments{
 \item{acf}{acf of the time-series}
 
 \item{delta}{sampling interval}
 
-\item{bias}{boolean value to bias as per Sykulski (2019)}
+\item{h}{optional window to apply to data. Defaults to rectangular}
 }
 \value{
 A vector of the positive spectral density,

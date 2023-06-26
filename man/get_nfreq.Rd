@@ -6,6 +6,9 @@
 \usage{
 get_nfreq(l)
 }
+\arguments{
+\item{l}{length of blocks}
+}
 \value{
 An integer of number of frequencies
 }

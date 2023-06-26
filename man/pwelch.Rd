@@ -4,7 +4,7 @@
 \alias{pwelch}
 \title{Calculate Welch's Estimator}
 \usage{
-pwelch(ts, m, l, s, delta = 1, window = NULL)
+pwelch(ts, m, l, s, delta = 1, h = NULL)
 }
 \arguments{
 \item{ts}{time-series as a vector}
@@ -17,7 +17,7 @@ pwelch(ts, m, l, s, delta = 1, window = NULL)
 
 \item{delta}{sampling interval}
 
-\item{window}{optional window to apply to data. Defaults to rectangular}
+\item{h}{optional window to apply to data. Defaults to rectangular}
 }
 \value{
 A tibble containing Welch's estimate

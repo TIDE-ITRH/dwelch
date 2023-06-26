@@ -1,6 +1,6 @@
 #' Calculate number of frequencies exluding zero and Nyquist
 #'
-#' @inheritparams pwelch
+#' @param l length of blocks
 #'
 #' @return An integer of number of frequencies
 #' @export

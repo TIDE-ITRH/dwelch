@@ -1,5 +1,5 @@
 #' Calculate biased bases (slow)
-#'
+#' 
 #' @inheritParams pwelch
 #' @param k number of bases
 #'
