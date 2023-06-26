@@ -5,13 +5,13 @@
 #' @param l length of blocks
 #' @param s shift factor
 #' @param delta sampling interval
-#' @param window optional window to apply to data. Defaults to rectangular
+#' @param h optional window to apply to data. Defaults to rectangular
 #'
 #' @return A tibble containing Welch's estimate
 #' @export
 #'
 #' @examples
-pwelch <- function(ts, m, l, s, delta = 1, window = NULL) {
+pwelch <- function(ts, m, l, s, delta = 1, h = NULL) {
 
     n <- (m - 1) * s + l
     nfreq <- get_nfreq(l)
@@ -21,19 +21,19 @@ pwelch <- function(ts, m, l, s, delta = 1, window = NULL) {
         stop() # Change to zero-pad and continue
     }
 
-    if (is.null(window)) {
-        window <- rep(1, l)
+    if (is.null(h)) {
+        h <- rep(1, l)
     }
 
     ff <- (1:(nfreq)) / (l * delta)
     pxx <- matrix(nrow = nfreq, ncol = m)
 
-    window <- window / sqrt(sum(window^2))
+    h <- h / sqrt(sum(h^2))
 
     for (i in 1:m){
         start <- (i - 1) * s + 1
         end <- start + l - 1
-        ts_tmp <- ts[start:end] * window
+        ts_tmp <- ts[start:end] * h
         pxx[, i] <- (Mod(stats::fft(ts_tmp))^2)[2:(nfreq + 1)]
     }
 

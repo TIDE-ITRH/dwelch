@@ -17,7 +17,8 @@ bochner <- function(acf, delta = 1, h = NULL) {
         acf <- (1 - (0:(n - 1)) / n) * acf
     } else {
         h <- h / sqrt(sum(h^2)) # normalise h
-        stats::convolve(h, h, type = "open")[n:(2 * n - 1)]
+        h_conv <- stats::convolve(h, h, type = "open")[n:(2 * n - 1)]
+        acf <- h_conv * acf
     }
 
     acf <- c(acf[1] / 2, acf[2:(n - 1)], acf[n] / 2)
