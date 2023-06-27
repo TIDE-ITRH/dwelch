@@ -3,6 +3,8 @@
 export(ar_spectrum)
 export(bochner)
 export(build_bases)
+export(dwelch)
+export(get_centres)
 export(get_nfreq)
 export(pwelch)
 export(sinc)

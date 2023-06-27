@@ -37,11 +37,11 @@ pwelch <- function(ts, m, l, s, delta = 1, h = NULL) {
         pxx[, i] <- (Mod(stats::fft(ts_tmp))^2)[2:(nfreq + 1)]
     }
 
-    welch_estimate <- rowMeans(pxx)
+    pwelch <- rowMeans(pxx)
 
     dplyr::tibble(
         ff = ff,
-        welch = welch_estimate
+        pwelch = pwelch
     )
 }
 

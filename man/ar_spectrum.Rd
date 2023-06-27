@@ -4,7 +4,7 @@
 \alias{ar_spectrum}
 \title{Calculate AR spectrum}
 \usage{
-ar_spectrum(ff, phis, sd)
+ar_spectrum(ff, phis, sd, delta = 1)
 }
 \arguments{
 \item{ff}{frequencies at which to compute spectrum}
@@ -12,6 +12,8 @@ ar_spectrum(ff, phis, sd)
 \item{phis}{autoregressive parameters}
 
 \item{sd}{standard deviation of the noise}
+
+\item{delta}{sampling interval}
 }
 \value{
 A vector of the AR spectrum corresponding the ff frequencies

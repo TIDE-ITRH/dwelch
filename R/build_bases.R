@@ -1,5 +1,5 @@
 #' Calculate biased bases (slow)
-#' 
+#'
 #' @inheritParams pwelch
 #' @param k number of bases
 #'
@@ -9,16 +9,10 @@
 #' @examples
 build_bases <- function(l, k, h = NULL) {
 
-    is_even <- l %% 2 == 0
     nfreq <- get_nfreq(l)
 
-    if (is_even) {
-        width <- 0.5 / (k + 1)
-    } else {
-        width <- 0.5 / (k + 0.5)
-    }
-
-    centres <- seq(width, k * width, width)
+    centres <- get_centres(l, k)$centres
+    width <- get_centres(l, k)$width
 
     bases <- matrix(nrow = nfreq, ncol = k)
 
