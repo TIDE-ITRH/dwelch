@@ -2,18 +2,19 @@
 #'
 #' @inheritParams pwelch
 #' @inheritParams build_bases
-#' @param pwelch output tibble from function pwelch
 #'
 #' @return A tibble containing the debiased Welch estimate
 #' @export
 #'
 #' @examples
-dwelch <- function(pwelch, l, k, delta = 1, h = NULL) {
+dwelch <- function(ts, m, l, s, k, delta = 1, h = NULL) {
 
-    W <-  diag(1 / (pwelch$pwelch^2))
-    pw <- matrix(pwelch$pwelch)
+    pw_tbl <- dwelch::pwelch(ts, m, l, s, delta, h)
 
-    B <- build_bases(l, k, h)
+    W <-  diag(1 / (pw_tbl$pwelch^2)) # nolint: object_name_linter.
+    pw <- matrix(pw_tbl$pwelch)
+
+    B <- build_bases(l, k, h) # nolint: object_name_linter.
 
     dwelch <- solve(t(B) %*% W %*% B) %*% t(B) %*% W %*% pw
 
@@ -27,3 +28,4 @@ dwelch <- function(pwelch, l, k, delta = 1, h = NULL) {
 # I think we could probably figure out l from figuring out
 # odd/even and backing out. Probably not worth it for now.
 # Add in functionality through an option on how to compute
+# dwelch should run it's own pwelch??

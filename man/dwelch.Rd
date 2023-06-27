@@ -4,12 +4,16 @@
 \alias{dwelch}
 \title{Calculate the Debiased Welch Estimator (slow)}
 \usage{
-dwelch(pwelch, l, k, delta = 1, h = NULL)
+dwelch(ts, m, l, s, k, delta = 1, h = NULL)
 }
 \arguments{
-\item{pwelch}{output tibble from function pwelch}
+\item{ts}{time-series as a vector}
+
+\item{m}{number of blocks}
 
 \item{l}{length of blocks}
+
+\item{s}{shift factor}
 
 \item{k}{number of bases}
 
