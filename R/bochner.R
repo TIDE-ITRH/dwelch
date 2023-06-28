@@ -20,7 +20,13 @@ bochner <- function(acf, delta = 1, h = NULL) {
         acf <- h_conv * acf
     }
 
-    acf <- c(acf[1] / 2, acf[2:(n - 1)], acf[n] / 2)
+    is_even <- n %% 2 == 0
+
+    if (is_even) {
+        acf <- c(acf[1] / 2, acf[2:(n - 1)], acf[n] / 2)
+    } else {
+        acf <- c(acf[1] / 2, acf[2:n])
+    }
 
     2 * delta * Re(stats::fft(acf))[2:(nfreq + 1)]
 

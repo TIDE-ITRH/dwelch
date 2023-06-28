@@ -106,9 +106,6 @@ nnls_bc <- dwelch(sampled_ar, m, l, s, k, delta, h_bc, model = "nnls")
 nnls_hm <- dwelch(sampled_ar, m, l, s, k, delta, h_hm, model = "nnls")
 ```
 
-    #> Warning in self$trans$transform(x): NaNs produced
-    #> Warning: Transformation introduced infinite values in continuous y-axis
-
 <img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" />
 
 ## Convergence to Welch’s estimate

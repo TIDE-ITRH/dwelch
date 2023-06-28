@@ -185,7 +185,7 @@ nnls_bc <- dwelch(sampled_ar, m, l, s, k, delta, h_bc, model = "nnls")
 nnls_hm <- dwelch(sampled_ar, m, l, s, k, delta, h_hm, model = "nnls")
 ```
 
-```{r, echo = FALSE, fig.width = 10, fig.height = 5}
+```{r, echo = FALSE, warning = FALSE, fig.width = 10, fig.height = 5}
 pwelch_both <- pwelch_bc %>%
     left_join(pwelch_hm, by = "ff", suffix = c("_Boxcar", "_Hamming")) %>%
     pivot_longer(
