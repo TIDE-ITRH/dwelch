@@ -4,7 +4,7 @@
 \alias{dwelch}
 \title{Calculate the Debiased Welch Estimator (slow)}
 \usage{
-dwelch(ts, m, l, s, k, delta = 1, h = NULL)
+dwelch(ts, m, l, s, k, delta = 1, h = NULL, model = "vanilla")
 }
 \arguments{
 \item{ts}{time-series as a vector}
@@ -20,6 +20,10 @@ dwelch(ts, m, l, s, k, delta = 1, h = NULL)
 \item{delta}{sampling interval}
 
 \item{h}{optional window to apply to data. Defaults to rectangular}
+
+\item{model}{what solution algorithm to use. "vanilla" computes
+the standard WLS esitmate with. "nnls" constrains the solution space
+to non-negative solutions.}
 }
 \value{
 A tibble containing the debiased Welch estimate

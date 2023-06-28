@@ -7,7 +7,9 @@
 <!-- badges: end -->
 
 <tt>dwelch</tt> provides code to calculate the debiased Welch estimator
-developed in LINK TO PAPER.
+developed in LINK TO PAPER. Code for routine data manipulation and
+plotting is hidden; if you are interested in this consult
+<tt>README.Rmd</tt>.
 
 ## Installation
 
@@ -47,106 +49,66 @@ Define our data taper, <tt>h</tt>, and calculate Welch’s estimate of the
 AR process. We will show results for the boxcar and Hamming tapers
 side-by-side. See package
 [gsignal](https://cran.r-project.org/web/packages/gsignal/index.html)
-for a fairly comprehensive list of other tapers.
+for a fairly comprehensive list of other tapers. Note, gsignal masks the
+function <tt>pwelch</tt> and so if gsignal is loaded into your R session
+you will need to explicitly call <tt>dwelch::pwelch</tt>.
 
 ``` r
 h_hm <- gsignal::hamming(l) # Hamming filter
 h_bc <- rep(1, l) #Boxcar filter
 
-pwelch_bc <- dwelch::pwelch(sampled_ar, m, l, s, delta, h_bc)
-pwelch_hm <- dwelch::pwelch(sampled_ar, m, l, s, delta, h_hm)
-
-# Plot both pwelch estimates together
-
-pwelch_both <- pwelch_bc %>%
-    left_join(pwelch_hm, by = "ff", suffix = c("_Boxcar", "_Hamming")) %>%
-    pivot_longer(
-        -ff,
-        names_to = "filter",
-        names_prefix = "pwelch_",
-        values_to = "pwelch"
-    )
-
-pwelch_both %>%
-    mutate(ar = ar_spectrum(pwelch_both$ff, phis, sd, delta)) %>%
-    ggplot() +
-    geom_line(aes(x = ff, y = ar), linewidth = 1, alpha = 0.3) +
-    geom_line(aes(x = ff, y = pwelch, colour = "pwelch")) +
-    scale_x_continuous(
-        "Frequency [Hz]",
-        limits = c(0, 0.5 / delta),
-        expand = c(0, 0)
-    ) +
-    scale_y_continuous(
-        "Spectral density",
-        limits = c(1e-3, 1e5),
-        expand = c(0, 0),
-        trans = "log10"
-    ) +
-    scale_color_manual(values = c("pwelch" = "#002385")) +
-    facet_wrap(vars(filter)) +
-    theme(
-        legend.position = c(0.9, 0.8),
-        legend.title = element_blank(),
-        text = element_text(size = 16)
-    )
+pwelch_bc <- pwelch(sampled_ar, m, l, s, delta, h_bc)
+pwelch_hm <- pwelch(sampled_ar, m, l, s, delta, h_hm)
 ```
 
-<img src="man/figures/README-unnamed-chunk-5-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-6-1.png" width="100%" />
 
-## Calculated Debiased Welch estimate
+## Calculate debiased Welch estimate
 
 For the debiased Welch estimator we must only make one additional
-specification: the number of debiased bases, <tt>k</tt>. Aside from
-this, the function <tt>dwelch</tt> excutes similarly to <tt>pwelch</tt>,
-above.
+specification: the number of debiased bases, <tt>k</tt>. Aside from the
+selection of <tt>k</tt>, the function <tt>dwelch</tt> excutes similarly
+to <tt>pwelch</tt>, above.
 
 ``` r
 k <- round(get_nfreq(l) / 2, 0)
 
 dwelch_bc <- dwelch(sampled_ar, m, l, s, k, delta, h_bc)
 dwelch_hm <- dwelch(sampled_ar, m, l, s, k, delta, h_hm)
-
-# Plot both dwelch estimates together
-
-dwelch_both <- dwelch_bc %>%
-    left_join(dwelch_hm, by = "ff", suffix = c("_Boxcar", "_Hamming")) %>%
-    pivot_longer(
-        -ff,
-        names_to = "filter",
-        names_prefix = "dwelch_",
-        values_to = "dwelch"
-    )
-
-pwelch_both %>%
-    mutate(ar = ar_spectrum(pwelch_both$ff, phis, sd, delta)) %>%
-    ggplot() +
-    geom_line(aes(x = ff, y = ar), linewidth = 1, alpha = 0.3) +
-    geom_line(aes(x = ff, y = pwelch, colour = "pwelch")) +
-    geom_line(
-        data = dwelch_both,
-        mapping = aes(x = ff, y = dwelch, colour = "dwelch")
-    ) +
-    scale_x_continuous(
-        "Frequency [Hz]",
-        limits = c(0, 0.5 / delta),
-        expand = c(0, 0)
-    ) +
-    scale_y_continuous(
-        "Spectral density",
-        limits = c(1e-3, 1e5),
-        expand = c(0, 0),
-        trans = "log10"
-    ) +
-    scale_color_manual(
-        values = c("pwelch" = "#002385", "dwelch" = "#8d3b00")
-    ) +
-    facet_wrap(vars(filter)) +
-    theme(
-        legend.position = c(0.9, 0.8),
-        legend.title = element_blank(),
-        text = element_text(size = 16)
-    )
 ```
 
-<img src="man/figures/README-unnamed-chunk-6-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-8-1.png" width="100%" />
+
+## Non-negative solutions
+
+The WLS solution does not constain the debiased estimator to
+non-negative solutions, which is required of a spectral estimator. Note,
+this happens when the signal at a frequency is masked by spectral
+leakage. <tt>dwelch</tt> has functionality to constrain solutions to be
+non-negative, this is done by setting <tt>model = “nnls”</tt>. See the
+example below where we have selected an example with a particularly bad
+solution space. Note, non-positive values are not plotted. Note that for
+the Hamming tapered data where the solution is already non-negative, the
+nnls solution is the same.
+
+``` r
+set.seed(23)
+
+sampled_ar <- stats::arima.sim(list(ar = phis), n, n.start = 1000, sd = sd)
+
+pwelch_bc <- dwelch::pwelch(sampled_ar, m, l, s, delta, h_bc)
+pwelch_hm <- dwelch::pwelch(sampled_ar, m, l, s, delta, h_hm)
+
+dwelch_bc <- dwelch(sampled_ar, m, l, s, k, delta, h_bc)
+dwelch_hm <- dwelch(sampled_ar, m, l, s, k, delta, h_hm)
+
+nnls_bc <- dwelch(sampled_ar, m, l, s, k, delta, h_bc, model = "nnls")
+nnls_hm <- dwelch(sampled_ar, m, l, s, k, delta, h_hm, model = "nnls")
+```
+
+    #> Warning in self$trans$transform(x): NaNs produced
+    #> Warning: Transformation introduced infinite values in continuous y-axis
+
+<img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" />
+
+## Convergence to Welch’s estimate

@@ -2,30 +2,36 @@
 #'
 #' @inheritParams pwelch
 #' @inheritParams build_bases
+#' @param model what solution algorithm to use. "vanilla" computes
+#' the standard WLS esitmate with. "nnls" constrains the solution space
+#' to non-negative solutions.
 #'
 #' @return A tibble containing the debiased Welch estimate
 #' @export
 #'
 #' @examples
-dwelch <- function(ts, m, l, s, k, delta = 1, h = NULL) {
+dwelch <- function(ts, m, l, s, k, delta = 1, h = NULL, model = "vanilla") {
 
     pw_tbl <- dwelch::pwelch(ts, m, l, s, delta, h)
 
-    W <-  diag(1 / (pw_tbl$pwelch^2)) # nolint: object_name_linter.
-    pw <- matrix(pw_tbl$pwelch)
+    L <-  diag(1 / (pw_tbl$pwelch))
+    b <- L %*% matrix(pw_tbl$pwelch)
 
-    B <- build_bases(l, k, h) # nolint: object_name_linter.
+    A <- L %*% dwelch::build_bases(l, k, h)
 
-    dwelch <- solve(t(B) %*% W %*% B) %*% t(B) %*% W %*% pw
+    if (model == "vanilla") {
+        dw <- solve(t(A) %*% A) %*% t(A) %*% b
+    } else if (model == "nnls") {
+        dw <- nnls::nnls(A, b)$x
+    }
 
     dplyr::tibble(
-        ff = get_centres(l, k, delta = delta)$centres,
-        dwelch = as.numeric(dwelch)
+        ff = dwelch::get_centres(l, k, delta = delta)$centres,
+        dwelch = as.numeric(dw)
     )
 
 }
 
 # I think we could probably figure out l from figuring out
 # odd/even and backing out. Probably not worth it for now.
-# Add in functionality through an option on how to compute
-# dwelch should run it's own pwelch??
+# check model is in options
