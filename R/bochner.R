@@ -10,7 +10,7 @@
 #' @examples
 bochner <- function(acf, delta = 1, h = NULL) {
     n <- length(acf)
-    nfreq <- get_nfreq(n)
+    nfreq <- dwelch::get_nfreq(n)
 
     if (is.null(h)) {
         acf <- (1 - (0:(n - 1)) / n) * acf

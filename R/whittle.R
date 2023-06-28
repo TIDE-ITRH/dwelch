@@ -9,7 +9,7 @@
 #'
 #' @examples
 whittle <- function(psd, periodogram, return_log = TRUE) {
-    wll <- sum(log(psd) + (periodogram / 2) / psd)
+    wll <- sum(log(psd) + periodogram / psd)
 
     if (return_log) {
         wll

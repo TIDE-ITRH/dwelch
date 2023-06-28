@@ -12,6 +12,10 @@
 #' @examples
 dwelch <- function(ts, m, l, s, k, delta = 1, h = NULL, model = "vanilla") {
 
+    if (!"vanilla" %in% c("vanilla", "nnls")) {
+        stop("model value is not valid.")
+    }
+
     pw_tbl <- dwelch::pwelch(ts, m, l, s, delta, h)
 
     L <-  diag(1 / (pw_tbl$pwelch))
@@ -31,7 +35,3 @@ dwelch <- function(ts, m, l, s, k, delta = 1, h = NULL, model = "vanilla") {
     )
 
 }
-
-# I think we could probably figure out l from figuring out
-# odd/even and backing out. Probably not worth it for now.
-# check model is in options

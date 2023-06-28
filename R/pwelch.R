@@ -3,15 +3,31 @@
 #' @param ts time-series as a vector
 #' @param m number of blocks
 #' @param l length of blocks
-#' @param s shift factor
+#' @param s shift factor, alternatively specified by the overlap parameter
 #' @param delta sampling interval
 #' @param h optional window to apply to data. Defaults to rectangular
+#' @param overlap optional overlap parameter specified between 0 and 1
 #'
 #' @return A tibble containing Welch's estimate
 #' @export
 #'
 #' @examples
-pwelch <- function(ts, m, l, s, delta = 1, h = NULL) {
+pwelch <- function(ts, m, l, s = NULL, delta = 1, h = NULL, overlap = NULL) {
+
+    if (is.null(s) && is.null(overlap)) {
+        stop("either s or overlap must be specified")
+    }
+
+    if ((!is.null(s)) && (!is.null(overlap))) {
+        warning("both s and overlap are specified. Taking s value")
+    }
+
+    if (is.null(s) && !is.null(overlap)) {
+        if (!0 <= overlap && overlap <= 1) {
+            stop("overlap must be between 0 and 1")
+        }
+        s <- round(overlap * l, 0)
+    }
 
     n <- (m - 1) * s + l
     nfreq <- get_nfreq(l)
@@ -48,4 +64,3 @@ pwelch <- function(ts, m, l, s, delta = 1, h = NULL) {
 # Notes for future development
 # Add some tests and warning messages
 # Change so it zero-pads the last one
-# Add functionality for percentage overlap
