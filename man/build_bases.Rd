@@ -4,7 +4,16 @@
 \alias{build_bases}
 \title{Calculate biased bases (slow)}
 \usage{
-build_bases(l, k, h = NULL)
+build_bases(
+  l,
+  k = NULL,
+  h = NULL,
+  delta = 1,
+  centres = NULL,
+  widths = NULL,
+  lowers = NULL,
+  uppers = NULL
+)
 }
 \arguments{
 \item{l}{length of blocks}
@@ -12,6 +21,8 @@ build_bases(l, k, h = NULL)
 \item{k}{number of bases}
 
 \item{h}{optional window to apply to data. Defaults to rectangular}
+
+\item{delta}{sampling interval}
 }
 \value{
 A l x k matrix of each of the bases

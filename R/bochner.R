@@ -2,13 +2,14 @@
 #'
 #' @inheritParams pwelch
 #' @param acf acf of the time-series
+#' @param full boolean value if return full symmetric spectrum
 #'
 #' @return A vector of the positive spectral density,
 #' excluding zero and Nyquist frequencies
 #' @export
 #'
 #' @examples
-bochner <- function(acf, delta = 1, h = NULL) {
+bochner <- function(acf, delta = 1, h = NULL, full = FALSE) {
     n <- length(acf)
     nfreq <- dwelch::get_nfreq(n)
 
@@ -28,6 +29,10 @@ bochner <- function(acf, delta = 1, h = NULL) {
         acf <- c(acf[1] / 2, acf[2:n])
     }
 
-    2 * delta * Re(stats::fft(acf))[2:(nfreq + 1)]
+    if (full) {
+        dwelch::fftshift(2 * delta * Re(stats::fft(acf)))
+    } else {
+        2 * delta * Re(stats::fft(acf))[2:(nfreq + 1)]
+    }
 
 }

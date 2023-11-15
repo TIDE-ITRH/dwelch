@@ -4,7 +4,7 @@
 \alias{pwelch}
 \title{Calculate Welch's Estimator}
 \usage{
-pwelch(ts, m, l, s, delta = 1, h = NULL)
+pwelch(ts, m, l, s = NULL, delta = 1, h = NULL, overlap = NULL)
 }
 \arguments{
 \item{ts}{time-series as a vector}
@@ -13,11 +13,13 @@ pwelch(ts, m, l, s, delta = 1, h = NULL)
 
 \item{l}{length of blocks}
 
-\item{s}{shift factor}
+\item{s}{shift factor, alternatively specified by the overlap parameter}
 
 \item{delta}{sampling interval}
 
 \item{h}{optional window to apply to data. Defaults to rectangular}
+
+\item{overlap}{optional overlap parameter specified between 0 and 1}
 }
 \value{
 A tibble containing Welch's estimate

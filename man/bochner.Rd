@@ -4,7 +4,7 @@
 \alias{bochner}
 \title{Compute Bochner's Theorem}
 \usage{
-bochner(acf, delta = 1, h = NULL)
+bochner(acf, delta = 1, h = NULL, full = FALSE)
 }
 \arguments{
 \item{acf}{acf of the time-series}
@@ -12,6 +12,8 @@ bochner(acf, delta = 1, h = NULL)
 \item{delta}{sampling interval}
 
 \item{h}{optional window to apply to data. Defaults to rectangular}
+
+\item{full}{boolean value if return full symmetric spectrum}
 }
 \value{
 A vector of the positive spectral density,

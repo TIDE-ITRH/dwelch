@@ -253,3 +253,158 @@ pwelch_both %>%
 ```
 
 ## Convergence to Welch's estimate
+
+```{r}
+set.seed(28)
+
+k <- round(get_nfreq(l), 0)
+
+m1 <- 16
+m2 <- 64
+n1 <- (m1 - 1) * s + l
+n2 <- (m2 - 1) * s + l
+
+h_hn <- gsignal::hann(l) # Hann filter
+
+sampled_ar1 <- stats::arima.sim(list(ar = phis), n1, n.start = 1000, sd = sd)
+sampled_ar2 <- stats::arima.sim(list(ar = phis), n2, n.start = 1000, sd = sd)
+
+pwelch_hn1 <- dwelch::pwelch(sampled_ar1, m1, l, s, delta, h_hn)
+dwelch_hn1 <- dwelch::dwelch(sampled_ar1, m1, l, s, k, delta, h_hn)
+pwelch_hn2 <- dwelch::pwelch(sampled_ar2, m2, l, s, delta, h_hn)
+dwelch_hn2 <- dwelch::dwelch(sampled_ar2, m2, l, s, k, delta, h_hn)
+```
+
+```{r, echo = FALSE, warning = FALSE, fig.width = 10, fig.height = 5}
+
+annotation_custom2 <- function(
+    grob, xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf, data
+) {
+    layer(
+        data = data,
+        stat = StatIdentity,
+        position = PositionIdentity,
+        geom = ggplot2:::GeomCustomAnn,
+        inherit.aes = TRUE,
+        params = list(
+            grob = grob,
+            xmin = xmin,
+            xmax = xmax,
+            ymin = ymin,ymax = ymax
+        )
+    )
+}
+
+pwelch_both <- pwelch_hn1 %>%
+    left_join(pwelch_hn2, by = "ff", suffix = c("_m=16", "_m=64")) %>%
+    pivot_longer(
+        -ff,
+        names_to = "m",
+        names_prefix = "pwelch_",
+        values_to = "pwelch"
+    )
+
+dwelch_both <- dwelch_hn1 %>%
+    left_join(dwelch_hn2, by = "ff", suffix = c("_m=16", "_m=64")) %>%
+    pivot_longer(
+        -ff,
+        names_to = "m",
+        names_prefix = "dwelch_",
+        values_to = "dwelch"
+    )
+
+p1 <- pwelch_both %>%
+    mutate(ar = ar_spectrum(pwelch_both$ff, phis, sd, delta)) %>%
+    ggplot() +
+    geom_line(aes(x = ff, y = ar), linewidth = 1, alpha = 0.3) +
+    geom_line(aes(x = ff, y = pwelch, colour = "pwelch")) +
+    geom_line(
+        data = dwelch_both,
+        mapping = aes(x = ff, y = dwelch, colour = "dwelch")
+    ) +
+    scale_x_continuous(
+        "Frequency [Hz]",
+        limits = c(0, 0.5 / delta),
+        expand = c(0, 0)
+    ) +
+    scale_y_continuous(
+        "Spectral density",
+        limits = c(1e-3, 1e5),
+        expand = c(0, 0),
+        trans = "log10"
+    ) +
+    scale_color_manual(
+        values = c("pwelch" = "#002385", "dwelch" = "#8d3b00")
+    ) +
+    facet_wrap(vars(m)) +
+    theme(legend.position = c(0.93, 0.9), legend.title = element_blank())
+
+p2a <- pwelch_both %>%
+    mutate(ar = ar_spectrum(pwelch_both$ff, phis, sd, delta)) %>%
+    filter(m == "m=16") %>%
+    ggplot() +
+    geom_line(aes(x = ff, y = ar), linewidth = 1, alpha = 0.3) +
+    geom_line(aes(x = ff, y = pwelch, colour = "pwelch")) +
+    geom_line(
+        data = dwelch_both %>% filter(m == "m=16"),
+        mapping = aes(x = ff, y = dwelch, colour = "dwelch")
+    ) +
+    scale_x_continuous(
+        "Frequency [Hz]",
+        limits = c(0.25, 0.35),
+        expand = c(0, 0)
+    ) +
+    scale_y_continuous(
+        "Spectral density",
+        limits = c(1e-2, 5e-1),
+        expand = c(0, 0),
+        trans = "log10"
+    ) +
+    scale_color_manual(
+        values = c("pwelch" = "#002385", "dwelch" = "#8d3b00")
+    ) +
+    theme(legend.position = "none", axis.title = element_blank())
+
+p2b <- pwelch_both %>%
+    mutate(ar = ar_spectrum(pwelch_both$ff, phis, sd, delta)) %>%
+    filter(m == "m=64") %>%
+    ggplot() +
+    geom_line(aes(x = ff, y = ar), linewidth = 1, alpha = 0.3) +
+    geom_line(aes(x = ff, y = pwelch, colour = "pwelch")) +
+    geom_line(
+        data = dwelch_both %>% filter(m == "m=64"),
+        mapping = aes(x = ff, y = dwelch, colour = "dwelch")
+    ) +
+    scale_x_continuous(
+        "Frequency [Hz]",
+        limits = c(0.25, 0.35),
+        expand = c(0, 0)
+    ) +
+    scale_y_continuous(
+        "Spectral density",
+        limits = c(1e-2, 5e-1),
+        expand = c(0, 0),
+        trans = "log10"
+    ) +
+    scale_color_manual(
+        values = c("pwelch" = "#002385", "dwelch" = "#8d3b00")
+    ) +
+    theme(legend.position = "none", axis.title = element_blank())
+
+p1 +
+    annotation_custom2(
+        grob = ggplotGrob(p2a),
+        data = data.frame(m = "m=16"),
+        ymin = 0.5, ymax = 4, xmin = 0.21, xmax = 0.47
+    ) +
+    annotation_custom2(
+        grob = ggplotGrob(p2b),
+        data = data.frame(m = "m=64"),
+        ymin = 0.5, ymax = 4, xmin = 0.21, xmax = 0.47
+    ) +
+    geom_rect(
+        aes(xmin = 0.25, xmax = .35, ymin = 1e-2, ymax = 5e-1),
+        colour = "black", linetype = "dashed", alpha = 0
+    )
+
+```

@@ -109,3 +109,26 @@ nnls_hm <- dwelch(sampled_ar, m, l, s, k, delta, h_hm, model = "nnls")
 <img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" />
 
 ## Convergence to Welch’s estimate
+
+``` r
+set.seed(28)
+
+k <- round(get_nfreq(l), 0)
+
+m1 <- 16
+m2 <- 64
+n1 <- (m1 - 1) * s + l
+n2 <- (m2 - 1) * s + l
+
+h_hn <- gsignal::hann(l) # Hann filter
+
+sampled_ar1 <- stats::arima.sim(list(ar = phis), n1, n.start = 1000, sd = sd)
+sampled_ar2 <- stats::arima.sim(list(ar = phis), n2, n.start = 1000, sd = sd)
+
+pwelch_hn1 <- dwelch::pwelch(sampled_ar1, m1, l, s, delta, h_hn)
+dwelch_hn1 <- dwelch::dwelch(sampled_ar1, m1, l, s, k, delta, h_hn)
+pwelch_hn2 <- dwelch::pwelch(sampled_ar2, m2, l, s, delta, h_hn)
+dwelch_hn2 <- dwelch::dwelch(sampled_ar2, m2, l, s, k, delta, h_hn)
+```
+
+<img src="man/figures/README-unnamed-chunk-12-1.png" width="100%" />

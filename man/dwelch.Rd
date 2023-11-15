@@ -4,7 +4,20 @@
 \alias{dwelch}
 \title{Calculate the Debiased Welch Estimator (slow)}
 \usage{
-dwelch(ts, m, l, s, k, delta = 1, h = NULL, model = "vanilla")
+dwelch(
+  ts,
+  m,
+  l,
+  s,
+  k = NULL,
+  delta = 1,
+  h = NULL,
+  model = c("vanilla", "nnls"),
+  centres = NULL,
+  widths = NULL,
+  lowers = NULL,
+  uppers = NULL
+)
 }
 \arguments{
 \item{ts}{time-series as a vector}
@@ -13,7 +26,7 @@ dwelch(ts, m, l, s, k, delta = 1, h = NULL, model = "vanilla")
 
 \item{l}{length of blocks}
 
-\item{s}{shift factor}
+\item{s}{shift factor, alternatively specified by the overlap parameter}
 
 \item{k}{number of bases}
 
