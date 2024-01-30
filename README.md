@@ -85,12 +85,8 @@ selection of <tt>k</tt>, the function <tt>dwelch</tt> excutes similarly
 to <tt>pwelch</tt>, above.
 
 ``` r
-dwelch_bc <- dwelch::dwelch(
-    sampled_ar, m, l, s, k = l / 4, h = h_bc, model = "nnls"
-)
-dwelch_hm <- dwelch::dwelch(
-    sampled_ar, m, l, s, k = l / 4, h = h_hm, model = "nnls"
-)
+dwelch_bc <- dwelch::dwelch(sampled_ar, m, l, s, k = l / 4, h = h_bc)
+dwelch_hm <- dwelch::dwelch(sampled_ar, m, l, s, k = l / 4, h = h_hm)
 ```
 
     #> Warning: Removed 1 row containing missing values (`geom_line()`).
