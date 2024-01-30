@@ -102,8 +102,7 @@ is masked by spectral leakage. <tt>dwelch</tt> has functionality to
 constrain solutions to be non-negative, this is done by setting
 <tt>model = “nnls”</tt>. See the example below where we have selected an
 example with a particularly bad solution space. Note, non-positive
-values are not plotted. Note that for the Hamming tapered data where the
-solution is already non-negative, the nnls solution is the same.
+values are not plotted.
 
 ``` r
 set.seed(45)
@@ -119,15 +118,23 @@ dwelch_nnls <- dwelch::dwelch(sampled_ar, m, l, s, k = l / 4, h = h_bc, model = 
 
 <img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" />
 
-## Convergence to Welch’s estimate
+## Equivalence to Welch’s estimate
+
+In circumstances where there is no, or little, bias present in the
+result, <tt>dwelch</tt> converges to the pwelch estimate. For the AR(4)
+model above, a Hann taper removes almost all of the broadband blurring
+(this is discussed further in Percival and Walden). We would then expect
+the dwelch and pwelch estimates to be the same. We show this below,
+noting that as $m$ increases, and hence the validity of certain
+assumptions in the paper increase, the estimates converge.
 
 ``` r
 set.seed(28)
 
 k <- round(get_nfreq(l), 0)
 
-m1 <- 16
-m2 <- 64
+m1 <- 32
+m2 <- 128
 n1 <- (m1 - 1) * s + l
 n2 <- (m2 - 1) * s + l
 
