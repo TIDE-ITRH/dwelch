@@ -33,6 +33,7 @@ library(ggplot2)
 library(tidyverse)
 library(latex2exp)
 library(patchwork)
+library(SuperGauss)
 ```
 
 Next, we set our parameters and generate an AR process.
@@ -155,3 +156,43 @@ We can specify uneven bases for <tt>dwelch</tt> by instead providing
 either the centres and widths, or the lower and upper bounds of the
 bases. We demonstrate this functionality by replicating the Section 6
 results from the paper.
+
+``` r
+n_sample <- 2^15
+m <- 32
+l <- n_sample / m
+
+alpha <- 5 / 6 + 1
+lambda <- 0.1
+delta <- 1
+
+ff <- seq(1, l - 1) / l / delta
+ff <- ff[ff < (0.5 * 1 / delta)]
+
+acf <- matern_acf(delta * 0:(n_sample - 1), 1, alpha, lambda)
+psd <- matern_psd(ff, 1, alpha, lambda)
+
+sample <- cholZX(rnorm(n_sample), acf)
+
+h <- rep(1, l)
+
+n <- 20
+scale <- 0.0023
+
+linear_centres <- get_centres(l, n)$centres
+log_centres <- seq(log10(ff[1] + scale), log10(max(linear_centres + scale)), length = n)
+log_centres <- log_centres
+log_width <- diff(log_centres)[1]
+log_lowers <- log_centres - log_width / 2
+log_uppers <- log_centres + log_width / 2
+lowers <- 10^(log_lowers) - scale
+uppers <- 10^(log_uppers) - scale
+
+pwelch_sample <- dwelch::pwelch(sample, m, l, l, delta, h)
+dwelch_sample <- dwelch::dwelch(
+    sample, m, l, l, delta = delta, h = h,
+    model = "nnls", lowers = lowers, uppers = uppers
+)
+```
+
+<img src="man/figures/README-unnamed-chunk-15-1.png" width="100%" />

@@ -39,6 +39,7 @@ library(ggplot2)
 library(tidyverse)
 library(latex2exp)
 library(patchwork)
+library(SuperGauss)
 ```
 
 ```{r echo = FALSE}
@@ -510,4 +511,244 @@ p1 +
 
 ## Uneven Bases
 
-We can specify uneven bases for <tt>dwelch</tt> by instead providing either the centres and widths, or the lower and upper bounds of the bases. We demonstrate this functionality by replicating the Section 6 results from the paper. 
+We can specify uneven bases for <tt>dwelch</tt> by instead providing either the centres and widths, or the lower and upper bounds of the bases. We demonstrate this functionality by replicating the Section 6 results from the paper.
+
+```{r, echo = FALSE}
+matern_acf <- function(tt, eta, alpha, lmbda, sigma = 0) {
+
+    nu <- alpha - 1/2
+    K <- 2 * eta^2 / (gamma(nu) * 2^nu)
+    K <- K * abs(lmbda * tt)^nu
+    K <- K * besselK(abs(lmbda * tt), nu)
+    K[1] <- eta^2
+
+    K[1] <- K[1] + sigma^2
+
+    return(K)
+
+}
+
+matern_psd <- function(ff, eta, alpha, lmbda, sigma = 0) {
+
+    c <- gamma(1/2) * gamma(alpha - 1/2) / (2 * gamma(alpha) * pi)
+    S <- eta^2 * lmbda^(2 * alpha - 1) / c
+    S <- S * ((2 * pi * ff)^2 + lmbda^2)^(-alpha)
+
+    return(S)
+
+}
+
+set.seed(217)
+```
+
+```{r}
+n_sample <- 2^15
+m <- 32
+l <- n_sample / m
+
+alpha <- 5 / 6 + 1
+lambda <- 0.1
+delta <- 1
+
+ff <- seq(1, l - 1) / l / delta
+ff <- ff[ff < (0.5 * 1 / delta)]
+
+acf <- matern_acf(delta * 0:(n_sample - 1), 1, alpha, lambda)
+psd <- matern_psd(ff, 1, alpha, lambda)
+
+sample <- cholZX(rnorm(n_sample), acf)
+
+h <- rep(1, l)
+
+n <- 20
+scale <- 0.0023
+
+linear_centres <- get_centres(l, n)$centres
+log_centres <- seq(log10(ff[1] + scale), log10(max(linear_centres + scale)), length = n)
+log_centres <- log_centres
+log_width <- diff(log_centres)[1]
+log_lowers <- log_centres - log_width / 2
+log_uppers <- log_centres + log_width / 2
+lowers <- 10^(log_lowers) - scale
+uppers <- 10^(log_uppers) - scale
+
+pwelch_sample <- dwelch::pwelch(sample, m, l, l, delta, h)
+dwelch_sample <- dwelch::dwelch(
+    sample, m, l, l, delta = delta, h = h,
+    model = "nnls", lowers = lowers, uppers = uppers
+)
+```
+
+```{r, echo = FALSE, warning = FALSE, fig.width = 10, fig.height = 10}
+centres <- (lowers + uppers)/2
+nudge <- centres[1] - ff[1]
+centres <- centres - nudge
+
+linear_pwelch <- tibble(
+    ff = ff,
+    true_spec = psd,
+    biased_spec = dwelch::bochner(
+        matern_acf(delta * 0:(l-1), 1, alpha, lambda),
+        delta = delta, h = h
+    )
+) %>%
+    ggplot() +
+        geom_line(aes(x = ff, y = true_spec), colour = "grey", linetype = "dashed", size = 1) +
+        geom_line(aes(x = ff, y = biased_spec), colour = "grey", size = 1) +
+        geom_line(
+            data = pwelch_sample,
+            mapping = aes(x = ff, y = pwelch),
+            alpha = 0.8
+        ) +
+        geom_rug(aes(x = ff)) +
+        scale_y_continuous(
+            TeX("Spectral density [$m^2 / Hz]"),
+            trans = "log10",
+            limits = c(10^-4, 10^2),
+            breaks = c(10^-4, 10^-2, 10^0, 10^2),
+            labels = c(
+                TeX("$10^{-4}$"),
+                TeX("$10^{-2}$"),
+                TeX("$10^0$"),
+                TeX("$10^2$")
+            )
+        ) +
+        scale_x_continuous("Frequency [Hz]", expand = c(0.005,0.005)) +
+        theme_bw() +
+        theme(
+            panel.grid.minor = element_blank(),
+            axis.title.x = element_blank(),
+            # axis.text.x = element_blank()
+        )
+
+log_pwelch <- tibble(
+    ff = ff,
+    true_spec = psd,
+    biased_spec = dwelch::bochner(
+        matern_acf(delta * 0:(l-1), 1, alpha, lambda),
+        delta = delta, h = h
+    )
+) %>%
+    ggplot() +
+        geom_line(aes(x = ff, y = true_spec), colour = "grey", linetype = "dashed", size = 1) +
+        geom_line(aes(x = ff, y = biased_spec), colour = "grey", size = 1) +
+        geom_line(
+            data = pwelch_sample,
+            mapping = aes(x = ff, y = pwelch),
+            alpha = 0.8
+        ) +
+        geom_rug(aes(x = ff)) +
+        scale_y_continuous(
+            TeX("Spectral density [$m^2 / Hz]"),
+            trans = "log10",
+            limits = c(10^-4, 10^2),
+            breaks = c(10^-4, 10^-2, 10^0, 10^2),
+            labels = c(
+                TeX("$10^{-4}$"),
+                TeX("$10^{-2}$"),
+                TeX("$10^0$"),
+                TeX("$10^2$")
+            )
+        ) +
+        scale_x_continuous(
+            "Frequency [Hz]", 
+            trans = "log10", 
+            expand = c(0.005,0.005),
+            breaks = c(10^-3, 10^-2, 10^{-1}),
+            labels = c(
+                TeX("$10^{-3}$"),
+                TeX("$10^{-2}$"),
+                TeX("$10^{-1}$")
+            )
+            ) +
+        theme_bw() +
+        theme(panel.grid.minor = element_blank())
+
+linear_dwelch <- tibble(
+    ff = ff,
+    true_spec = psd,
+    biased_spec = dwelch::bochner(
+        matern_acf(delta * 0:(l-1), 1, alpha, lambda),
+        delta = delta, h = h
+    )
+) %>%
+    ggplot() +
+        geom_line(aes(x = ff, y = true_spec), colour = "grey", linetype = "dashed", size = 1) +
+        geom_line(aes(x = ff, y = biased_spec), colour = "grey", size = 1) +
+        geom_line(
+            data = dwelch_sample,
+            mapping = aes(x = ff, y = dwelch), size = 1
+        ) +
+        geom_rug(data = tibble(c = centres), aes(x = c)) +
+        scale_y_continuous(
+            TeX("Spectral density [$m^2 / Hz]"),
+            trans = "log10",
+            limits = c(10^-4, 10^2),
+            breaks = c(10^-4, 10^-2, 10^0, 10^2),
+            labels = c(
+                TeX("$10^{-4}$"),
+                TeX("$10^{-2}$"),
+                TeX("$10^0$"),
+                TeX("$10^2$")
+            )
+        ) +
+        scale_x_continuous("Frequency [Hz]", expand = c(0.005,0.005)) +
+        theme_bw() +
+        theme(
+            panel.grid.minor = element_blank(),
+            axis.title.x = element_blank(),
+            # axis.text.x = element_blank(),
+            axis.title.y = element_blank(),
+            axis.text.y = element_blank()
+        )
+
+log_dwelch <- tibble(
+    ff = ff,
+    true_spec = psd,
+    biased_spec = dwelch::bochner(
+        matern_acf(delta * 0:(l-1), 1, alpha, lambda),
+        delta = delta, h = h
+    )
+) %>%
+    ggplot() +
+        geom_line(aes(x = ff, y = true_spec), colour = "grey", linetype = "dashed", size = 1) +
+        geom_line(aes(x = ff, y = biased_spec), colour = "grey", size = 1) +
+        geom_line(
+            data = dwelch_sample,
+            mapping = aes(x = ff, y = dwelch), size = 1
+        ) +
+        geom_rug(data = tibble(c = centres), aes(x = c)) +
+        scale_y_continuous(
+            TeX("Spectral density [$m^2 / Hz]"),
+            trans = "log10",
+            limits = c(10^-4, 10^2),
+            breaks = c(10^-4, 10^-2, 10^0, 10^2),
+            labels = c(
+                TeX("$10^{-4}$"),
+                TeX("$10^{-2}$"),
+                TeX("$10^0$"),
+                TeX("$10^2$")
+            )
+        ) +
+        scale_x_continuous(
+            "Frequency [Hz]", 
+            trans = "log10", 
+            expand = c(0.005,0.005),
+            breaks = c(10^-3, 10^-2, 10^{-1}),
+            labels = c(
+                TeX("$10^{-3}$"),
+                TeX("$10^{-2}$"),
+                TeX("$10^{-1}$")
+            )
+            ) +
+        theme_bw() +
+        theme(
+            panel.grid.minor = element_blank(),
+            axis.title.y = element_blank(),
+            axis.text.y = element_blank()
+        )
+
+final_plot <- (linear_pwelch + linear_dwelch) / (log_pwelch + log_dwelch)
+
+final_plot
+```
