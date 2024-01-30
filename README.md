@@ -155,7 +155,10 @@ dwelch_hn2 <- dwelch::dwelch(sampled_ar2, m2, l, s, k, delta, h_hn)
 We can specify uneven bases for <tt>dwelch</tt> by instead providing
 either the centres and widths, or the lower and upper bounds of the
 bases. We demonstrate this functionality by replicating the Section 6
-results from the paper.
+results from the paper. Herem, we calculate lower and upper bounds, and
+specify our bases as approximately linear in the log-space (the first
+couple of bases instead align with the natural Fourier frequencies so as
+to not lead to an undefined system).
 
 ``` r
 n_sample <- 2^15

@@ -511,7 +511,7 @@ p1 +
 
 ## Uneven Bases
 
-We can specify uneven bases for <tt>dwelch</tt> by instead providing either the centres and widths, or the lower and upper bounds of the bases. We demonstrate this functionality by replicating the Section 6 results from the paper.
+We can specify uneven bases for <tt>dwelch</tt> by instead providing either the centres and widths, or the lower and upper bounds of the bases. We demonstrate this functionality by replicating the Section 6 results from the paper. Herem, we calculate lower and upper bounds, and specify our bases as approximately linear in the log-space (the first couple of bases instead align with the natural Fourier frequencies so as to not lead to an undefined system).
 
 ```{r, echo = FALSE}
 matern_acf <- function(tt, eta, alpha, lmbda, sigma = 0) {
@@ -579,7 +579,7 @@ dwelch_sample <- dwelch::dwelch(
 )
 ```
 
-```{r, echo = FALSE, warning = FALSE, fig.width = 10, fig.height = 10}
+```{r, echo = FALSE, warning = FALSE, fig.width = 10, fig.height = 7}
 centres <- (lowers + uppers)/2
 nudge <- centres[1] - ff[1]
 centres <- centres - nudge
