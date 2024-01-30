@@ -7,14 +7,16 @@
 <!-- badges: end -->
 
 <tt>dwelch</tt> provides code to calculate the debiased Welch estimator
-developed in LINK TO PAPER. Code for routine data manipulation and
-plotting is hidden; if you are interested in this consult
-<tt>README.Rmd</tt>.
+developed [here](https://arxiv.org/pdf/2312.13643.pdf). Code for routine
+data manipulation and plotting is hidden; if you are interested in this
+consult <tt>README.Rmd</tt>. <tt>python</tt> implementation of the code
+is part of the larger <tt>speccy</tt> package available
+[here](https://github.com/TIDE-ITRH/speccy).
 
 ## Installation
 
 You can install the development version of <tt>dwelch</tt> from
-[GitHub](https://github.com/) with:
+[GitHub](https://github.com) with:
 
 ``` r
 devtools::install_github("astfalckl/dwelch")
