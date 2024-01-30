@@ -31,20 +31,26 @@ classic AR(4) problem. First, import some basic packages.
 library(dwelch)
 library(ggplot2)
 library(tidyverse)
+library(latex2exp)
+library(patchwork)
 ```
 
 Next, we set our parameters and generate an AR process.
 
 ``` r
-m <- 32
-l <- 512
-s <- ceiling(l / 2)
+m <- 2^6
+l <- 2^9
+overlap <- 0
+s <- l * (1 - overlap)
 n <- (m - 1) * s + l
-delta <- 1 # sampling interval (not frequency)
+delta <- 1
 
 phis <- c(2.7607, -3.8106, 2.6535, -0.9238)
 sd <- 1
-sampled_ar <- stats::arima.sim(list(ar = phis), n, n.start = 1000, sd = sd)
+
+sampled_ar <- stats::arima.sim(
+    list(ar = phis), n, n.start = 1000, sd = sd
+)
 ```
 
 Define our data taper, <tt>h</tt>, and calculate Welch’s estimate of the
@@ -59,9 +65,15 @@ you will need to explicitly call <tt>dwelch::pwelch</tt>.
 h_hm <- gsignal::hamming(l) # Hamming filter
 h_bc <- rep(1, l) #Boxcar filter
 
-pwelch_bc <- pwelch(sampled_ar, m, l, s, delta, h_bc)
-pwelch_hm <- pwelch(sampled_ar, m, l, s, delta, h_hm)
+pwelch_bc <- dwelch::pwelch(sampled_ar, m, l, s, delta, h_bc)
+pwelch_hm <- dwelch::pwelch(sampled_ar, m, l, s, delta, h_hm)
 ```
+
+    #> Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+    #> ℹ Please use `linewidth` instead.
+    #> This warning is displayed once every 8 hours.
+    #> Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+    #> generated.
 
 <img src="man/figures/README-unnamed-chunk-6-1.png" width="100%" />
 
@@ -73,11 +85,15 @@ selection of <tt>k</tt>, the function <tt>dwelch</tt> excutes similarly
 to <tt>pwelch</tt>, above.
 
 ``` r
-k <- round(get_nfreq(l) / 2, 0)
-
-dwelch_bc <- dwelch(sampled_ar, m, l, s, k, delta, h_bc)
-dwelch_hm <- dwelch(sampled_ar, m, l, s, k, delta, h_hm)
+dwelch_bc <- dwelch::dwelch(
+    sampled_ar, m, l, s, k = l / 4, h = h_bc, model = "nnls"
+)
+dwelch_hm <- dwelch::dwelch(
+    sampled_ar, m, l, s, k = l / 4, h = h_hm, model = "nnls"
+)
 ```
+
+    #> Warning: Removed 1 row containing missing values (`geom_line()`).
 
 <img src="man/figures/README-unnamed-chunk-8-1.png" width="100%" />
 
@@ -95,6 +111,8 @@ nnls solution is the same.
 
 ``` r
 set.seed(23)
+
+k = l / 4
 
 sampled_ar <- stats::arima.sim(list(ar = phis), n, n.start = 1000, sd = sd)
 

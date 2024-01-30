@@ -41,25 +41,31 @@ We demonstrate the basic functionality of <tt>dwelch</tt> with the classic AR(4)
 library(dwelch)
 library(ggplot2)
 library(tidyverse)
+library(latex2exp)
+library(patchwork)
 ```
 
 ```{r echo = FALSE}
-set.seed(4)
+set.seed(91)
 theme_set(theme_bw())
 ```
 
 Next, we set our parameters and generate an AR process.
 
 ```{r}
-m <- 32
-l <- 512
-s <- ceiling(l / 2)
+m <- 2^6
+l <- 2^9
+overlap <- 0
+s <- l * (1 - overlap)
 n <- (m - 1) * s + l
-delta <- 1 # sampling interval (not frequency)
+delta <- 1
 
 phis <- c(2.7607, -3.8106, 2.6535, -0.9238)
 sd <- 1
-sampled_ar <- stats::arima.sim(list(ar = phis), n, n.start = 1000, sd = sd)
+
+sampled_ar <- stats::arima.sim(
+    list(ar = phis), n, n.start = 1000, sd = sd
+)
 ```
 
 Define our data taper, <tt>h</tt>, and calculate Welch's estimate of the AR process. We will show results for 
@@ -71,43 +77,92 @@ gsignal is loaded into your R session you will need to explicitly call <tt>dwelc
 h_hm <- gsignal::hamming(l) # Hamming filter
 h_bc <- rep(1, l) #Boxcar filter
 
-pwelch_bc <- pwelch(sampled_ar, m, l, s, delta, h_bc)
-pwelch_hm <- pwelch(sampled_ar, m, l, s, delta, h_hm)
+pwelch_bc <- dwelch::pwelch(sampled_ar, m, l, s, delta, h_bc)
+pwelch_hm <- dwelch::pwelch(sampled_ar, m, l, s, delta, h_hm)
 ```
 
 ```{r, echo = FALSE, fig.width = 10, fig.height = 5}
-pwelch_both <- pwelch_bc %>%
-    left_join(pwelch_hm, by = "ff", suffix = c("_Boxcar", "_Hamming")) %>%
-    pivot_longer(
-        -ff,
-        names_to = "filter",
-        names_prefix = "pwelch_",
-        values_to = "pwelch"
-    )
+ff <- seq(1, l - 1) / l
+ff <- ff[ff < 0.5]
+proc_var <- 2 * sum(ar_spectrum(ff, phis, sd, delta) * diff(ff)[1])
+ar_acf <- stats::ARMAacf(ar = phis, lag.max = l - 1)
 
-pwelch_both %>%
-    mutate(ar = ar_spectrum(pwelch_both$ff, phis, sd, delta)) %>%
+biased_bc_plot <- tibble(
+    ff = ff,
+    true_ar_spec = ar_spectrum(ff, phis, sd, delta),
+    biased_ar_spec = dwelch::bochner(proc_var * ar_acf, h = h_bc),
+    pwelch = pwelch_bc$pwelch
+    ) %>%
     ggplot() +
-    geom_line(aes(x = ff, y = ar), linewidth = 1, alpha = 0.3) +
-    geom_line(aes(x = ff, y = pwelch, colour = "pwelch")) +
-    scale_x_continuous(
-        "Frequency [Hz]",
-        limits = c(0, 0.5 / delta),
-        expand = c(0, 0)
-    ) +
-    scale_y_continuous(
-        "Spectral density",
-        limits = c(1e-3, 1e5),
-        expand = c(0, 0),
-        trans = "log10"
-    ) +
-    scale_color_manual(values = c("pwelch" = "#002385")) +
-    facet_wrap(vars(filter)) +
-    theme(
-        legend.position = c(0.9, 0.8),
-        legend.title = element_blank(),
-        text = element_text(size = 16)
-    )
+        geom_line(
+            aes(x = ff, y = true_ar_spec),
+            linetype = "dashed", alpha = 0.25, size = 0.75
+        ) +
+        geom_line(
+            aes(x = ff, y = biased_ar_spec),
+            alpha = 0.25, size = 0.75
+        ) +
+        geom_line(
+            aes(x = ff, y = pwelch)
+        ) +
+        scale_y_continuous(
+            TeX("Spectral density [$m^2 / Hz]"),
+            trans = "log10",
+            limits = c(0.7 * 10^-2, 2.5 * 10^4),
+            breaks = c(10^-2, 10^0, 10^2, 10^4),
+            labels = c(
+                TeX("$10^{-2}$"),
+                TeX("$10^0$"),
+                TeX("$10^2$"),
+                TeX("$10^4$")
+            )) +
+        scale_x_continuous("Frequency [Hz]") +
+        ggtitle("Rectangular Taper") +
+        theme_bw() +
+        theme(
+            panel.grid.minor = element_blank()
+        )
+
+biased_hm_plot <- tibble(
+    ff = ff,
+    true_ar_spec = ar_spectrum(ff, phis, sd, delta),
+    biased_ar_spec = dwelch::bochner(proc_var * ar_acf, h = h_hm),
+    pwelch = pwelch_hm$pwelch
+    ) %>%
+    ggplot() +
+        geom_line(
+            aes(x = ff, y = true_ar_spec),
+            linetype = "dashed", alpha = 0.25, size = 0.75
+        ) +
+        geom_line(
+            aes(x = ff, y = biased_ar_spec),
+            alpha = 0.25, size = 0.75
+        ) +
+        geom_line(
+            aes(x = ff, y = pwelch)
+        ) +
+        scale_y_continuous(
+            TeX("Spectral density [$m^2 / Hz]"),
+            trans = "log10",
+            limits = c(0.7 * 10^-2, 2.5 * 10^4),
+            breaks = c(10^-2, 10^0, 10^2, 10^4),
+            labels = c(
+                TeX("$10^{-2}$"),
+                TeX("$10^0$"),
+                TeX("$10^2$"),
+                TeX("$10^4$")
+            )) +
+        scale_x_continuous("Frequency [Hz]") +
+        ggtitle("Hamming Taper") +
+        theme_bw() +
+        theme(
+            panel.grid.minor = element_blank(),
+            axis.title.y = element_blank(),
+            axis.text.y = element_blank()
+        )
+
+pwelch_plot <- biased_bc_plot + biased_hm_plot
+pwelch_plot
 ```
 
 ## Calculate debiased Welch estimate
@@ -117,51 +172,91 @@ bases, <tt>k</tt>. Aside from the selection of <tt>k</tt>, the function <tt>dwel
 to <tt>pwelch</tt>, above.
 
 ```{r}
-k <- round(get_nfreq(l) / 2, 0)
-
-dwelch_bc <- dwelch(sampled_ar, m, l, s, k, delta, h_bc)
-dwelch_hm <- dwelch(sampled_ar, m, l, s, k, delta, h_hm)
+dwelch_bc <- dwelch::dwelch(
+    sampled_ar, m, l, s, k = l / 4, h = h_bc, model = "nnls"
+)
+dwelch_hm <- dwelch::dwelch(
+    sampled_ar, m, l, s, k = l / 4, h = h_hm, model = "nnls"
+)
 ```
 
 ```{r, echo = FALSE, fig.width = 10, fig.height = 5}
-dwelch_both <- dwelch_bc %>%
-    left_join(dwelch_hm, by = "ff", suffix = c("_Boxcar", "_Hamming")) %>%
-    pivot_longer(
-        -ff,
-        names_to = "filter",
-        names_prefix = "dwelch_",
-        values_to = "dwelch"
-    )
-
-pwelch_both %>%
-    mutate(ar = ar_spectrum(pwelch_both$ff, phis, sd, delta)) %>%
+debiased_bc_plot <- tibble(
+    ff = ff,
+    true_ar_spec = ar_spectrum(ff, phis, sd, delta),
+    biased_ar_spec = dwelch::bochner(ar_acf)
+) %>%
     ggplot() +
-    geom_line(aes(x = ff, y = ar), linewidth = 1, alpha = 0.3) +
-    geom_line(aes(x = ff, y = pwelch, colour = "pwelch")) +
-    geom_line(
-        data = dwelch_both,
-        mapping = aes(x = ff, y = dwelch, colour = "dwelch")
-    ) +
-    scale_x_continuous(
-        "Frequency [Hz]",
-        limits = c(0, 0.5 / delta),
-        expand = c(0, 0)
-    ) +
-    scale_y_continuous(
-        "Spectral density",
-        limits = c(1e-3, 1e5),
-        expand = c(0, 0),
-        trans = "log10"
-    ) +
-    scale_color_manual(
-        values = c("pwelch" = "#002385", "dwelch" = "#8d3b00")
-    ) +
-    facet_wrap(vars(filter)) +
-    theme(
-        legend.position = c(0.9, 0.8),
-        legend.title = element_blank(),
-        text = element_text(size = 16)
-    )
+        geom_line(
+            aes(x = ff, y = true_ar_spec),
+            linetype = "dashed", alpha = 0.25, size = 0.75
+        ) +
+        geom_line(
+            aes(x = ff, y = proc_var * biased_ar_spec),
+            alpha = 0.25, size = 0.75
+        ) +
+        geom_line(
+            data = dwelch_bc %>%
+                filter(dwelch != 0),
+            aes(x = ff, y = dwelch)
+        ) +
+        scale_y_continuous(
+            TeX("Spectral density [$m^2 / Hz]"),
+            trans = "log10",
+            limits = c(0.7 * 10^-2, 2.5 * 10^4),
+            breaks = c(10^-2, 10^0, 10^2, 10^4),
+            labels = c(
+                TeX("$10^{-2}$"),
+                TeX("$10^0$"),
+                TeX("$10^2$"),
+                TeX("$10^4$")
+            )) +
+        scale_x_continuous("Frequency [Hz]") +
+        ggtitle("Rectangular Taper, Debiased") +
+        theme_bw() +
+        theme(
+            panel.grid.minor = element_blank()
+        )
+
+debiased_hm_plot <- tibble(
+    ff = ff,
+    true_ar_spec = ar_spectrum(ff, phis, sd, delta),
+    biased_ar_spec = dwelch::bochner(proc_var * ar_acf, h = h_hm)
+) %>%
+    ggplot() +
+        geom_line(
+            aes(x = ff, y = true_ar_spec),
+            linetype = "dashed", alpha = 0.25, size = 0.75
+        ) +
+        geom_line(
+            aes(x = ff, y = biased_ar_spec),
+            alpha = 0.25, size = 0.75
+        ) +
+        geom_line(
+            data = dwelch_hm %>%
+                filter(dwelch != 0),
+            aes(x = ff, y = dwelch)
+        ) +
+        scale_y_continuous("Spectral density", trans = "log10",
+            limits = c(0.7 * 10^-2, 2.5 * 10^4),
+            breaks = c(10^-2, 10^0, 10^2, 10^4),
+            labels = c(
+                TeX("$10^{-2}$"),
+                TeX("$10^0$"),
+                TeX("$10^2$"),
+                TeX("$10^4$")
+            )) +
+        scale_x_continuous("Frequency [Hz]") +
+        ggtitle("Hamming Taper, Debiased") +
+        theme_bw() +
+        theme(
+            panel.grid.minor = element_blank(),
+            axis.title.y = element_blank(),
+            axis.text.y = element_blank()
+        )
+
+dwelch_plot <- debiased_bc_plot + debiased_hm_plot
+dwelch_plot
 ```
 
 ## Non-negative solutions
@@ -175,6 +270,8 @@ the solution is already non-negative, the nnls solution is the same.
 
 ```{r, fig.width = 10, fig.height = 5}
 set.seed(23)
+
+k = l / 4
 
 sampled_ar <- stats::arima.sim(list(ar = phis), n, n.start = 1000, sd = sd)
 
