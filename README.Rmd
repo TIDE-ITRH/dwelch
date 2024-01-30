@@ -356,8 +356,6 @@ nnls_plot
 In circumstances where there is no, or little, bias present in the result, <tt>dwelch</tt> converges to the pwelch estimate. For the AR(4) model above, a Hann taper removes almost all of the broadband blurring (this is discussed further in Percival and Walden). We would then expect the dwelch and pwelch estimates to be the same. We show this below, noting that as $m$ increases, and hence the validity of certain assumptions in the paper increase, the estimates converge.
 
 ```{r}
-set.seed(28)
-
 k <- round(get_nfreq(l), 0)
 
 m1 <- 32

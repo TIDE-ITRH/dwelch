@@ -129,8 +129,6 @@ noting that as $m$ increases, and hence the validity of certain
 assumptions in the paper increase, the estimates converge.
 
 ``` r
-set.seed(28)
-
 k <- round(get_nfreq(l), 0)
 
 m1 <- 32
