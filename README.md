@@ -96,30 +96,25 @@ dwelch_hm <- dwelch::dwelch(sampled_ar, m, l, s, k = l / 4, h = h_hm)
 ## Non-negative solutions
 
 The WLS solution does not constain the debiased estimator to
-non-negative solutions, which is required of a spectral estimator. Note,
-this happens when the signal at a frequency is masked by spectral
-leakage. <tt>dwelch</tt> has functionality to constrain solutions to be
-non-negative, this is done by setting <tt>model = “nnls”</tt>. See the
-example below where we have selected an example with a particularly bad
-solution space. Note, non-positive values are not plotted. Note that for
-the Hamming tapered data where the solution is already non-negative, the
-nnls solution is the same.
+non-negative solutions, which is required of a spectral estimator with
+positive definite ACF. Note, this happens when the signal at a frequency
+is masked by spectral leakage. <tt>dwelch</tt> has functionality to
+constrain solutions to be non-negative, this is done by setting
+<tt>model = “nnls”</tt>. See the example below where we have selected an
+example with a particularly bad solution space. Note, non-positive
+values are not plotted. Note that for the Hamming tapered data where the
+solution is already non-negative, the nnls solution is the same.
 
 ``` r
-set.seed(23)
+set.seed(45)
 
-k = l / 4
+sampled_ar <- stats::arima.sim(
+    list(ar = phis), n, n.start = 1000, sd = sd
+)
 
-sampled_ar <- stats::arima.sim(list(ar = phis), n, n.start = 1000, sd = sd)
-
-pwelch_bc <- dwelch::pwelch(sampled_ar, m, l, s, delta, h_bc)
-pwelch_hm <- dwelch::pwelch(sampled_ar, m, l, s, delta, h_hm)
-
-dwelch_bc <- dwelch(sampled_ar, m, l, s, k, delta, h_bc)
-dwelch_hm <- dwelch(sampled_ar, m, l, s, k, delta, h_hm)
-
-nnls_bc <- dwelch(sampled_ar, m, l, s, k, delta, h_bc, model = "nnls")
-nnls_hm <- dwelch(sampled_ar, m, l, s, k, delta, h_hm, model = "nnls")
+pwelch_bc <- dwelch::pwelch(sampled_ar, m, l, s, h = h_bc)
+dwelch_bc <- dwelch::dwelch(sampled_ar, m, l, s, k = l / 4, h = h_bc)
+dwelch_nnls <- dwelch::dwelch(sampled_ar, m, l, s, k = l / 4, h = h_bc, model = "nnls")
 ```
 
 <img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" />
