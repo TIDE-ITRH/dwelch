@@ -148,3 +148,5 @@ dwelch_hn2 <- dwelch::dwelch(sampled_ar2, m2, l, s, k, delta, h_hn)
 ```
 
 <img src="man/figures/README-unnamed-chunk-12-1.png" width="100%" />
+
+## Uneven Bases

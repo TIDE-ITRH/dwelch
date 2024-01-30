@@ -440,12 +440,12 @@ p1 <- pwelch_both %>%
 
 p2a <- pwelch_both %>%
     mutate(ar = ar_spectrum(pwelch_both$ff, phis, sd, delta)) %>%
-    filter(m == "m=16") %>%
+    filter(m == "m=32") %>%
     ggplot() +
     geom_line(aes(x = ff, y = ar), linewidth = 1, alpha = 0.3) +
     geom_line(aes(x = ff, y = pwelch, colour = "pwelch")) +
     geom_line(
-        data = dwelch_both %>% filter(m == "m=16"),
+        data = dwelch_both %>% filter(m == "m=32"),
         mapping = aes(x = ff, y = dwelch, colour = "dwelch")
     ) +
     scale_x_continuous(
@@ -466,12 +466,12 @@ p2a <- pwelch_both %>%
 
 p2b <- pwelch_both %>%
     mutate(ar = ar_spectrum(pwelch_both$ff, phis, sd, delta)) %>%
-    filter(m == "m=64") %>%
+    filter(m == "m=128") %>%
     ggplot() +
     geom_line(aes(x = ff, y = ar), linewidth = 1, alpha = 0.3) +
     geom_line(aes(x = ff, y = pwelch, colour = "pwelch")) +
     geom_line(
-        data = dwelch_both %>% filter(m == "m=64"),
+        data = dwelch_both %>% filter(m == "m=128"),
         mapping = aes(x = ff, y = dwelch, colour = "dwelch")
     ) +
     scale_x_continuous(
@@ -493,12 +493,12 @@ p2b <- pwelch_both %>%
 p1 +
     annotation_custom2(
         grob = ggplotGrob(p2a),
-        data = data.frame(m = "m=16"),
+        data = data.frame(m = "m=32"),
         ymin = 0.5, ymax = 4, xmin = 0.21, xmax = 0.47
     ) +
     annotation_custom2(
         grob = ggplotGrob(p2b),
-        data = data.frame(m = "m=64"),
+        data = data.frame(m = "m=128"),
         ymin = 0.5, ymax = 4, xmin = 0.21, xmax = 0.47
     ) +
     geom_rect(
@@ -507,3 +507,5 @@ p1 +
     )
 
 ```
+
+## Uneven Bases
