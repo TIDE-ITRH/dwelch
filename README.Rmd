@@ -395,7 +395,7 @@ annotation_custom2 <- function(
 }
 
 pwelch_both <- pwelch_hn1 %>%
-    left_join(pwelch_hn2, by = "ff", suffix = c("_m=16", "_m=64")) %>%
+    left_join(pwelch_hn2, by = "ff", suffix = c("_m=32", "_m=128")) %>%
     pivot_longer(
         -ff,
         names_to = "m",
@@ -404,7 +404,7 @@ pwelch_both <- pwelch_hn1 %>%
     )
 
 dwelch_both <- dwelch_hn1 %>%
-    left_join(dwelch_hn2, by = "ff", suffix = c("_m=16", "_m=64")) %>%
+    left_join(dwelch_hn2, by = "ff", suffix = c("_m=32", "_m=128")) %>%
     pivot_longer(
         -ff,
         names_to = "m",
@@ -509,3 +509,5 @@ p1 +
 ```
 
 ## Uneven Bases
+
+We can specify uneven bases for <tt>dwelch</tt> by instead providing either the centres and widths, or the lower and upper bounds of the bases. We demonstrate this functionality by replicating the Section 6 results from the paper. 

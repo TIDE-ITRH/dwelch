@@ -150,3 +150,8 @@ dwelch_hn2 <- dwelch::dwelch(sampled_ar2, m2, l, s, k, delta, h_hn)
 <img src="man/figures/README-unnamed-chunk-12-1.png" width="100%" />
 
 ## Uneven Bases
+
+We can specify uneven bases for <tt>dwelch</tt> by instead providing
+either the centres and widths, or the lower and upper bounds of the
+bases. We demonstrate this functionality by replicating the Section 6
+results from the paper.
